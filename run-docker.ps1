@@ -34,24 +34,24 @@ Write-Host "🔍 Checking service status:" -ForegroundColor Cyan
 
 # Check Task Service
 try {
-    $response = Invoke-WebRequest -Uri "http://localhost:3001/health" -TimeoutSec 10
-    Write-Host "✅ Task Service: Running on port 3001" -ForegroundColor Green
+    $response = Invoke-WebRequest -Uri "http://localhost:3004/health" -TimeoutSec 10
+    Write-Host "✅ Task Service: Running on port 3004" -ForegroundColor Green
 } catch {
     Write-Host "❌ Task Service: Not responding" -ForegroundColor Red
 }
 
 # Check User Service
 try {
-    $response = Invoke-WebRequest -Uri "http://localhost:3002/health" -TimeoutSec 10
-    Write-Host "✅ User Service: Running on port 3002" -ForegroundColor Green
+    $response = Invoke-WebRequest -Uri "http://localhost:3005/health" -TimeoutSec 10
+    Write-Host "✅ User Service: Running on port 3005" -ForegroundColor Green
 } catch {
     Write-Host "❌ User Service: Not responding" -ForegroundColor Red
 }
 
 # Check Frontend
 try {
-    $response = Invoke-WebRequest -Uri "http://localhost:3000" -TimeoutSec 10
-    Write-Host "✅ Frontend: Running on port 3000" -ForegroundColor Green
+    $response = Invoke-WebRequest -Uri "http://localhost:3003" -TimeoutSec 10
+    Write-Host "✅ Frontend: Running on port 3003" -ForegroundColor Green
 } catch {
     Write-Host "❌ Frontend: Not responding" -ForegroundColor Red
 }
@@ -67,9 +67,9 @@ try {
 Write-Host ""
 Write-Host "🎉 Docker services started!" -ForegroundColor Green
 Write-Host "==========================" -ForegroundColor Green
-Write-Host "Frontend:    http://localhost:3000" -ForegroundColor White
-Write-Host "Task API:    http://localhost:3001" -ForegroundColor White
-Write-Host "User API:    http://localhost:3002" -ForegroundColor White
+Write-Host "Frontend:    http://localhost:3003" -ForegroundColor White
+Write-Host "Task API:    http://localhost:3004" -ForegroundColor White
+Write-Host "User API:    http://localhost:3005" -ForegroundColor White
 Write-Host "phpMyAdmin:  http://localhost:8080" -ForegroundColor White
 Write-Host ""
 Write-Host "📋 Useful Docker commands:" -ForegroundColor Yellow

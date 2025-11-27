@@ -5,7 +5,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "3003:80"
     depends_on:
       - task-service
       - user-service
@@ -19,7 +19,7 @@ services:
       context: ./backend/task-service
       dockerfile: Dockerfile
     ports:
-      - "3001:3001"
+      - "3004:3001"
     environment:
       - DB_HOST=tasks-db
       - DB_USER=root
@@ -40,7 +40,7 @@ services:
       context: ./backend/user-service
       dockerfile: Dockerfile
     ports:
-      - "3002:3002"
+      - "3005:3002"
     environment:
       - DB_HOST=users-db
       - DB_USER=root
