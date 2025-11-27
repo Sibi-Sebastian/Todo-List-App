@@ -1,0 +1,127 @@
+services:
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - task-service
+      - user-service
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+  # Node.js Task Service
+  task-service:
+    build:
+      context: ./backend/task-service
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - DB_HOST=tasks-db
+      - DB_USER=root
+      - DB_PASSWORD=sian
+      - DB_NAME=todo_tasks
+      - DB_PORT=3306
+      - PORT=3001
+    depends_on:
+      tasks-db:
+        condition: service_healthy
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+  # Python User Service
+  user-service:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - DB_HOST=users-db
+      - DB_USER=root
+      - DB_PASSWORD=sian
+      - DB_NAME=todo_users
+      - DB_PORT=3306
+      - PORT=3002
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      users-db:
+        condition: service_healthy
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+  # MySQL Database for Tasks
+  tasks-db:
+    image: mysql:8.0
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=sian
+      - MYSQL_DATABASE=todo_tasks
+      - MYSQL_USER=todo_user
+      - MYSQL_PASSWORD=todo_password
+    volumes:
+      - tasks-db-data:/var/lib/mysql
+      - ./database/init-tasks.sql:/docker-entrypoint-initdb.d/init-tasks.sql:ro
+    networks:
+      - todo-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 20s
+      retries: 10
+      interval: 30s
+      start_period: 10s
+    restart: unless-stopped
+
+  # MySQL Database for Users
+  users-db:
+    image: mysql:8.0
+    ports:
+      - "3308:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=sian
+      - MYSQL_DATABASE=todo_users
+      - MYSQL_USER=todo_user
+      - MYSQL_PASSWORD=todo_password
+    volumes:
+      - users-db-data:/var/lib/mysql
+      - ./database/init-users.sql:/docker-entrypoint-initdb.d/init-users.sql:ro
+    networks:
+      - todo-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      timeout: 20s
+      retries: 10
+      interval: 30s
+      start_period: 10s
+    restart: unless-stopped
+
+  # phpMyAdmin for Database Management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOSTS=tasks-db,users-db
+      - PMA_USER=root
+      - PMA_PASSWORD=sian
+    depends_on:
+      - tasks-db
+      - users-db
+    networks:
+      - todo-network
+    restart: unless-stopped
+
+volumes:
+  tasks-db-data:
+  users-db-data:
+
+networks:
+  todo-network:
+    driver: bridge
