@@ -1,0 +1,107 @@
+name: Dependency Vulnerability Check
+
+on:
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  # Check for vulnerable dependencies
+  dependency-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend/task-service/package-lock.json
+
+    - name: Audit frontend dependencies
+      run: |
+        cd frontend
+        npm audit --audit-level moderate
+
+    - name: Audit task service dependencies
+      run: |
+        cd backend/task-service
+        npm audit --audit-level moderate
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Check Python dependencies for vulnerabilities
+      run: |
+        cd backend/user-service
+        python -m pip install --upgrade pip
+        pip install safety
+        safety check --file requirements.txt
+
+  # Update dependencies (create PR)
+  dependency-updates:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Update frontend dependencies
+      run: |
+        cd frontend
+        npm update
+        npm audit fix
+
+    - name: Update task service dependencies
+      run: |
+        cd backend/task-service
+        npm update
+        npm audit fix
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Update Python dependencies
+      run: |
+        cd backend/user-service
+        python -m pip install --upgrade pip
+        pip install pip-tools
+        pip-compile --upgrade requirements.in
+      continue-on-error: true
+
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "chore: update dependencies"
+        title: "Weekly Dependency Updates"
+        body: |
+          This PR updates project dependencies to their latest versions.
+
+          ## Changes
+          - Updated Node.js dependencies (frontend & backend)
+          - Updated Python dependencies
+          - Fixed security vulnerabilities where possible
+
+          ## Checklist
+          - [ ] All tests pass
+          - [ ] No breaking changes
+          - [ ] Security vulnerabilities addressed
+        branch: automated/dependency-updates
+        delete-branch: true

@@ -236,6 +236,95 @@ curl -X POST http://localhost:3002/api/auth/register \
   -d '{"username": "testuser", "email": "test@example.com", "password": "password123"}'
 ```
 
+## 🚀 CI/CD Pipelines
+
+This project includes comprehensive CI/CD pipelines using GitHub Actions for automated testing, building, and deployment.
+
+### 📋 CI Pipeline (`ci.yml`)
+Runs automatically on:
+- Push to `main` or `develop` branches
+- Pull requests to `main` or `develop` branches
+
+**Includes:**
+- ✅ **Frontend Tests**: Jest testing with coverage
+- ✅ **Backend Tests**: Node.js (Mocha) and Python (pytest) tests
+- ✅ **Docker Builds**: Multi-stage builds for all services
+- ✅ **Code Quality**: ESLint for JS/JSX, Flake8 for Python
+- ✅ **Security Scans**: Dependency vulnerability checks
+
+### 🚢 Deployment Pipeline (`deploy.yml`)
+Runs on:
+- Push to `main` branch
+- Manual trigger via GitHub UI
+
+**Features:**
+- 🐳 **Docker Hub Integration**: Builds and pushes images
+- 🔐 **Environment Secrets**: Secure credential management
+- 📦 **Production Config**: Generates deployment artifacts
+- 🛡️ **Security Scanning**: Trivy vulnerability scanning
+- 🏷️ **Version Tagging**: Semantic versioning support
+
+### 🔄 Dependency Management (`dependency-check.yml`)
+- **Weekly Schedule**: Runs every Monday
+- **Vulnerability Checks**: NPM audit + Python safety
+- **Auto Updates**: Creates PRs for dependency updates
+
+### 📦 Release Pipeline (`release.yml`)
+Triggers on:
+- Git tag push (e.g., `v1.0.0`)
+
+**Creates:**
+- 📋 **GitHub Release** with changelog
+- 🐳 **Versioned Docker Images** on Docker Hub
+- 📊 **Release Artifacts** for deployment
+
+### 🔐 Required Secrets (GitHub Repository Settings)
+
+Add these secrets for deployment:
+
+```bash
+# Docker Hub
+DOCKERHUB_USERNAME=your_dockerhub_username
+DOCKERHUB_TOKEN=your_dockerhub_access_token
+
+# Database (for production deployment)
+DB_USER=todo_user
+DB_PASSWORD=secure_db_password
+DB_ROOT_PASSWORD=secure_root_password
+JWT_SECRET=your-production-jwt-secret-key
+```
+
+### 📊 Pipeline Status Badges
+
+Add these to your README:
+
+```markdown
+[![CI](https://github.com/Sibi-Sebastian/Todo-List-App/actions/workflows/ci.yml/badge.svg)](https://github.com/Sibi-Sebastian/Todo-List-App/actions/workflows/ci.yml)
+[![Deploy](https://github.com/Sibi-Sebastian/Todo-List-App/actions/workflows/deploy.yml/badge.svg)](https://github.com/Sibi-Sebastian/Todo-List-App/actions/workflows/deploy.yml)
+[![Dependencies](https://github.com/Sibi-Sebastian/Todo-List-App/actions/workflows/dependency-check.yml/badge.svg)](https://github.com/Sibi-Sebastian/Todo-List-App/actions/workflows/dependency-check.yml)
+```
+
+### 🛠️ Local Development with CI/CD
+
+```bash
+# Run CI checks locally
+npm run ci  # In each service directory
+
+# Test Docker builds locally
+docker-compose build
+
+# Run security scans locally
+npm audit
+pip install safety && safety check
+```
+
+### 🌐 Production Deployment
+
+1. **Set up secrets** in GitHub repository
+2. **Create Docker Hub** account and repository
+3. **Push to main branch** to trigger deployment
+4. **Use generated artifacts** for production deployment
+
 ## Production Considerations
 
 1. **Security**:
