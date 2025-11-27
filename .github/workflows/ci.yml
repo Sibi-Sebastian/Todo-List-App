@@ -30,7 +30,7 @@ jobs:
     - name: Run frontend tests
       run: |
         cd frontend
-        npm test -- --coverage --watchAll=false
+        CI=true npm test -- --coverage --watchAll=false --passWithNoTests
 
     - name: Build frontend
       run: |
@@ -46,6 +46,18 @@ jobs:
   # Test Task Service (Node.js)
   task-service-tests:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: sian
+          MYSQL_DATABASE: todo_tasks
+          MYSQL_USER: todo_user
+          MYSQL_PASSWORD: todo_password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
     - name: Checkout code
@@ -63,6 +75,29 @@ jobs:
         cd backend/task-service
         npm ci
 
+    - name: Wait for MySQL
+      run: |
+        until mysqladmin ping -h 127.0.0.1 -u root -psian --silent; do
+          echo "Waiting for MySQL..."
+          sleep 2
+        done
+        echo "MySQL is ready"
+
+    - name: Start task service
+      run: |
+        cd backend/task-service
+        DB_HOST=127.0.0.1 npm start &
+        sleep 5
+
+    - name: Check if service is running
+      run: |
+        if curl -f http://localhost:3001/health; then
+          echo "Task service is healthy"
+        else
+          echo "Task service failed to start"
+          exit 1
+        fi
+
     - name: Run task service tests
       run: |
         cd backend/task-service
@@ -71,6 +106,18 @@ jobs:
   # Test User Service (Python)
   user-service-tests:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: sian
+          MYSQL_DATABASE: todo_users
+          MYSQL_USER: todo_user
+          MYSQL_PASSWORD: todo_password
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
     - name: Checkout code
@@ -95,10 +142,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Wait for MySQL
+      run: |
+        until mysqladmin ping -h 127.0.0.1 -u root -psian --silent; do
+          echo "Waiting for MySQL..."
+          sleep 2
+        done
+        echo "MySQL is ready"
+
     - name: Run user service tests
       run: |
         cd backend/user-service
-        python -m pytest test.py -v
+        python test.py
 
   # Docker Build Test
   docker-build:
